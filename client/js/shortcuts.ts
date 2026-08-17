@@ -1,4 +1,4 @@
-import { tinykeys } from 'tinykeys';
+import { KeybindingsMap, tinykeys } from 'tinykeys';
 import selfoss from './selfoss-base';
 import { Direction } from './helpers/navigation';
 
@@ -21,146 +21,180 @@ function ignoreWhenInteracting(
 }
 
 /**
- * Set up shortcuts on document.
+ * A selfoss-side definition of all keybindings
+ * This is used to:
+ * - Limit boilerplate
+ * - Generate a tinykeys compatible KeybindingsMap (@see makeKeybindingsMap)
+ * - Generate a shortcut overview
  */
-export default function makeShortcuts(): () => void {
-    return tinykeys(window, {
-        // 'space': next article
-        Space: ignoreWhenInteracting((event: KeyboardEvent): void => {
-            event.preventDefault();
+interface IKeybinding {
+    readableName?: string;
+    description: string;
+    action: KeyboardEventHandler;
+}
+
+const KEYBINDINGS: { [keycombo: string]: IKeybinding } = {
+    Space: {
+        description: 'next article',
+        action: () => {
             selfoss.entriesPage?.jumpToNext();
-        }),
-
-        // 'n': next article
-        n: ignoreWhenInteracting((event: KeyboardEvent): void => {
-            event.preventDefault();
+        },
+    },
+    n: {
+        description: 'next article',
+        action: () => {
             selfoss.entriesPage?.nextPrev(Direction.NEXT, false);
-        }),
-
-        // 'right cursor': next article
-        ArrowRight: ignoreWhenInteracting((event: KeyboardEvent): void => {
-            event.preventDefault();
+        },
+    },
+    Arrowright: {
+        readableName: 'right cursor',
+        description: 'next article',
+        action: () => {
             selfoss.entriesPage?.entryNav(Direction.NEXT);
-        }),
-
-        // 'j': next article
-        j: ignoreWhenInteracting((event: KeyboardEvent): void => {
-            event.preventDefault();
+        },
+    },
+    j: {
+        description: 'next article',
+        action: () => {
             selfoss.entriesPage?.nextPrev(Direction.NEXT, true);
-        }),
-
-        // 'shift+space': previous article
-        'Shift+Space': ignoreWhenInteracting((event: KeyboardEvent): void => {
-            event.preventDefault();
+        },
+    },
+    'Shift+Space': {
+        description: 'previous article',
+        action: () => {
             selfoss.entriesPage?.nextPrev(Direction.PREV, true);
-        }),
-
-        // 'p': previous article
-        p: ignoreWhenInteracting((event: KeyboardEvent): void => {
-            event.preventDefault();
+        },
+    },
+    p: {
+        description: 'previous article',
+        action: () => {
             selfoss.entriesPage?.nextPrev(Direction.PREV, false);
-        }),
-
-        // 'left': previous article
-        ArrowLeft: ignoreWhenInteracting((event: KeyboardEvent): void => {
-            event.preventDefault();
+        },
+    },
+    ArrowLeft: {
+        readableName: 'left',
+        description:
+            'select previous entry (and open it when the current is open)',
+        action: () => {
             selfoss.entriesPage?.entryNav(Direction.PREV);
-        }),
-
-        // 'k': previous article
-        k: ignoreWhenInteracting((event: KeyboardEvent): void => {
-            event.preventDefault();
+        },
+    },
+    k: {
+        description: 'select and open previous entry',
+        action: () => {
             selfoss.entriesPage?.nextPrev(Direction.PREV, true);
-        }),
-
-        // 's': star/unstar
-        s: ignoreWhenInteracting((event: KeyboardEvent): void => {
-            event.preventDefault();
+        },
+    },
+    s: {
+        description: 'star/unstar',
+        action: () => {
             selfoss.entriesPage?.toggleSelectedStarred();
-        }),
-
-        // 'm': mark/unmark
-        m: ignoreWhenInteracting((event: KeyboardEvent): void => {
-            event.preventDefault();
+        },
+    },
+    m: {
+        description: 'mark/unmark',
+        action: () => {
             selfoss.entriesPage?.toggleSelectedRead();
-        }),
-
-        // 'o': open/close entry
-        o: ignoreWhenInteracting((event: KeyboardEvent): void => {
-            event.preventDefault();
+        },
+    },
+    o: {
+        description: 'open/close entry',
+        action: () => {
             selfoss.entriesPage?.toggleSelectedExpanded();
-        }),
-
-        // 'Shift + o': close open entries
-        'Shift+o': ignoreWhenInteracting((event: KeyboardEvent): void => {
-            event.preventDefault();
+        },
+    },
+    'Shift+o': {
+        description: 'close open entries',
+        action: () => {
             selfoss.entriesPage?.collapseAllEntries();
-        }),
-
-        // 'v': open target
-        v: ignoreWhenInteracting((event: KeyboardEvent): void => {
-            event.preventDefault();
+        },
+    },
+    v: {
+        description: 'open target',
+        action: () => {
             selfoss.entriesPage?.openSelectedTarget();
-        }),
-
-        // 'Shift + v': open target and mark read
-        'Shift+v': ignoreWhenInteracting((event: KeyboardEvent): void => {
-            event.preventDefault();
+        },
+    },
+    'Shift+v': {
+        description: 'open target and mark read',
+        action: () => {
             selfoss.entriesPage?.openSelectedTargetAndMarkRead();
-        }),
-
-        // 'r': Reload the current view
-        r: ignoreWhenInteracting((event: KeyboardEvent): void => {
-            event.preventDefault();
+        },
+    },
+    r: {
+        description: 'Reload the current view',
+        action: () => {
             selfoss.entriesPage?.reload();
-        }),
-
-        // 'Shift + r': Refresh sources
-        'Shift+r': ignoreWhenInteracting((event: KeyboardEvent): void => {
-            event.preventDefault();
+        },
+    },
+    'Shift+r': {
+        description: 'Refresh sources',
+        action: () => {
             document.querySelector<HTMLButtonElement>('#nav-refresh').click();
-        }),
-
-        // 'Control+m': mark all as read
-        'Control+m': ignoreWhenInteracting((event: KeyboardEvent): void => {
-            event.preventDefault();
+        },
+    },
+    'Control+m': {
+        description: 'mark all as read',
+        action: () => {
             document.querySelector<HTMLButtonElement>('#nav-mark').click();
-        }),
-
-        // 't': throw (mark as read & open next)
-        t: ignoreWhenInteracting((event: KeyboardEvent): void => {
-            event.preventDefault();
+        },
+    },
+    t: {
+        description: 'throw (mark as read & open next)',
+        action: () => {
             selfoss.entriesPage?.throw(Direction.NEXT);
-        }),
-
-        // throw (mark as read & open previous)
-        'Shift+t': ignoreWhenInteracting((event: KeyboardEvent): void => {
-            event.preventDefault();
+        },
+    },
+    'Shift+t': {
+        description: 'throw (mark as read & open previous)',
+        action: () => {
             selfoss.entriesPage?.throw(Direction.PREV);
-        }),
-
-        // 'Shift+n': switch to newest items overview / menu item
-        'Shift+n': ignoreWhenInteracting((event: KeyboardEvent): void => {
-            event.preventDefault();
+        },
+    },
+    'Shift+n': {
+        description: 'switch to newest items overview / menu item',
+        action: () => {
             document
                 .querySelector<HTMLAnchorElement>('#nav-filter-newest')
                 .click();
-        }),
-
-        // 'Shift+u': switch to unread items overview / menu item
-        'Shift+u': ignoreWhenInteracting((event: KeyboardEvent): void => {
-            event.preventDefault();
+        },
+    },
+    'Shift+u': {
+        description: 'switch to unread items overview / menu item',
+        action: () => {
             document
                 .querySelector<HTMLAnchorElement>('#nav-filter-unread')
                 .click();
-        }),
-
-        // 'Shift+s': switch to starred items overview / menu item
-        'Shift+s': ignoreWhenInteracting((event: KeyboardEvent): void => {
-            event.preventDefault();
+        },
+    },
+    'Shift+s': {
+        description: 'switch to starred items overview / menu item',
+        action: () => {
             document
                 .querySelector<HTMLAnchorElement>('#nav-filter-starred')
                 .click();
-        }),
-    });
+        },
+    },
+};
+
+function makeKeybindingsMap(): KeybindingsMap {
+    const shortcuts = Object.entries(KEYBINDINGS);
+    const keybindingsMap: KeybindingsMap = {};
+
+    for (const [keycombo, keybind] of shortcuts) {
+        keybindingsMap[keycombo] = ignoreWhenInteracting(
+            (event: KeyboardEvent) => {
+                event.preventDefault();
+                keybind.action(event);
+            },
+        );
+    }
+    return keybindingsMap;
+}
+
+/**
+ * Set up shortcuts on document.
+ */
+export default function makeShortcuts(): () => void {
+    return tinykeys(window, makeKeybindingsMap());
 }
