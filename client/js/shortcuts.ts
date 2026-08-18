@@ -1,6 +1,7 @@
 import { KeybindingsMap, tinykeys } from 'tinykeys';
 import selfoss from './selfoss-base';
 import { Direction } from './helpers/navigation';
+import { RefObject } from 'react';
 
 type KeyboardEventHandler = (event: KeyboardEvent) => void;
 
@@ -33,7 +34,7 @@ interface IKeybinding {
     action: KeyboardEventHandler;
 }
 
-const KEYBINDINGS: { [keycombo: string]: IKeybinding } = {
+export const KEYBINDINGS: { [keycombo: string]: IKeybinding } = {
     Space: {
         description: 'select and open next entry',
         action: () => {
@@ -178,13 +179,27 @@ const KEYBINDINGS: { [keycombo: string]: IKeybinding } = {
                 .click();
         },
     },
+    'h': {
+        description: "open shortcut help",
+        action: ()=>{}  // Assigned later
+    }
 };
 
-function makeKeybindingsMap(): KeybindingsMap {
+function makeKeybindingsMap(shortcutsDialog: RefObject<HTMLDialogElement>): KeybindingsMap {
     const shortcuts = Object.entries(KEYBINDINGS);
     const keybindingsMap: KeybindingsMap = {};
 
     for (const [keycombo, keybind] of shortcuts) {
+        if (keycombo == "h") {
+            keybind.action = () => {
+                if (shortcutsDialog.current.open) {
+                    shortcutsDialog.current.close();
+
+                } else {
+                    shortcutsDialog.current.showModal();
+                }
+            }
+        }
         keybindingsMap[keycombo] = ignoreWhenInteracting(
             (event: KeyboardEvent) => {
                 event.preventDefault();
@@ -198,6 +213,6 @@ function makeKeybindingsMap(): KeybindingsMap {
 /**
  * Set up shortcuts on document.
  */
-export default function makeShortcuts(): () => void {
-    return tinykeys(window, makeKeybindingsMap());
+export default function makeShortcuts(shortcutsDialog: RefObject<HTMLDialogElement>): () => void {
+    return tinykeys(window, makeKeybindingsMap(shortcutsDialog));
 }
